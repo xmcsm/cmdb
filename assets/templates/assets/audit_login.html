@@ -1,0 +1,79 @@
+{% extends 'assets/index.html' %}
+{% load static %}
+
+{% block title %}
+<title>审计</title>
+{% endblock title %}
+
+{% block index_active %}{% endblock %}
+{% block log_active %}active{% endblock %}
+{% block log_block %}display:block{% endblock %}
+{% block login_active %}active{% endblock %}
+    
+{% block navheader %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-1">
+            <div class="col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'assets:index' %}">首页</a></li>
+                    <li class="breadcrumb-item active">登陆日志</li>
+                </ol>
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+{% endblock navheader %}
+	
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">登陆日志</h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button type="button" class="btn btn-tool" data-widget="remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body">
+            <table id="assets-lists" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>用户名,昵称</th>
+                    <th>事件类型</th>
+                    <th>事件详情</th>
+                    <th>IP地址</th>
+                    <th>User_Agent</th>
+                    <th>事件时间</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for event in events %}
+                <tr
+                        {% if event.event_type == 3 or event.event_type == 4 %}
+                        style="color:red;"
+                        {% elif event.event_type == 1 or event.event_type == 5 %}
+                        style="color:green;"
+                        {% endif %}
+                >
+                    <td>{{ event.user }}</td>
+                    <td>{{ event.get_event_type_display }}</td>
+                    <td>{{ event.detail }}</td>
+                    <td>{{ event.address }}</td>
+                    <td>{{ event.useragent }}</td>
+                    <td>{{ event.create_time|date:"Y/m/d H:m:s" }}</td>
+                </tr>
+                {% empty %}
+                <tr>没有数据！</tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+{% endblock content %}

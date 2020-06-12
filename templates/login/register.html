@@ -1,0 +1,108 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>资产管理系统登陆</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{% static 'css/all.css' %}" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="{% static 'css/ionicons.min.css' %}">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="{% static 'AdminLTE-3.0.5/plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{% static 'AdminLTE-3.0.5/dist/css/adminlte.min.css' %}">
+  <!-- Google Font: Source Sans Pro -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+  
+</head>
+<body class="hold-transition register-page">
+    <div class="register-box">
+        <div class="register-logo">
+            <b>资产管理系统</b>
+        </div>
+        <!-- /.register-logo -->
+        <div class="card">
+            <div class="card-body register-card-body">
+                {% if error_message %}
+                <div class="alert alert-warning">{{ error_message }}</div>
+                {% endif %}
+
+                <p class="register-box-msg">注册</p>
+
+                <form id="registerform" action="{% url 'login:register' %}" method="post" class="mb-2 register-form" style="overflow: hidden">
+                    {% csrf_token %}
+                    {% for field in register_form %}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        <p class="text-danger">{{ field.errors.as_text }}</p>
+                    {% endfor %}
+                    <span id="register_error" class="text-danger pull-left"></span>
+                    <div class="row">
+                        <!-- /.col -->
+                        <div class="col">
+                            <button type="submit" class="btn btn-success btn-block btn-flat">注册</button>
+                            <button type="button" onclick="back()" class="btn btn-danger btn-block btn-flat">取消</button>
+                        </div>
+                        <!-- /.col -->
+                    </div>
+                </form>
+
+
+                <!--p class="mb-0">
+                <a href="register.html" class="text-center">注册账号</a>
+                </p-->
+            </div>
+            <!-- /.register-card-body -->
+        </div>
+    </div>
+    <!-- /.register-box -->
+
+    <!-- jQuery -->
+    <script src="{% static 'AdminLTE-3.0.5/plugins/jquery/jquery.min.js' %}"></script>
+    <!-- Bootstrap 4 -->
+    <script src="{% static 'AdminLTE-3.0.5/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        function back() {
+            window.location.href = {% url 'login:login' %}
+        }
+        $("#registerform").submit(function () {
+            $.ajax({
+                url:"{% url 'login:register' %}",
+                type:'POST',
+                data:$(this).serialize(),
+                cache:false,
+                success:function (data) {
+                    if(data['status'] == 'SUCCESS') {
+                        $('#register_error').html(data['message'][0]);
+                        var interval = setInterval(() => {
+                            window.location.href = {% url 'login:login' %}
+                            return false;
+                        },3000);
+                    }
+                    else{
+                        var msg = "";
+                        for(i=0;i<data['message'].length;i++) {
+                            if(msg != ""){
+                                msg += '<br>';
+                            }
+                            msg += data['message'][i]
+                        }
+                        $('#register_error').html(msg);
+                    }
+
+                },
+                error:function (xhr) {
+                    console.log(xhr);
+                }
+            });
+            return false;
+        })
+    </script>
+</body>
+</html>

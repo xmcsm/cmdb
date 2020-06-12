@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
+from login.models import User
+from django.shortcuts import get_object_or_404
 # Create your models here.
 
 
@@ -15,20 +16,19 @@ class Asset(models.Model):
     )
 
     asset_status = (
-        (0, '在线'),
+        (0, '在运'),
         (1, '下线'),
         (2, '未知'),
         (3, '故障'),
         (4, '备用'),
         )
 
-    asset_type = models.CharField(choices=asset_type_choice, max_length=64, default='server', verbose_name="资产类型")
+    asset_type = models.ForeignKey('AssetType',on_delete=models.CASCADE,verbose_name='资产类型')
     name = models.CharField(max_length=64, unique=True, verbose_name="资产名称")     # 不可重复
     sn = models.CharField(max_length=128, unique=True, verbose_name="资产序列号")  # 不可重复
     business_unit = models.ForeignKey('BusinessUnit', null=True, blank=True, verbose_name='所属业务线',
                                       on_delete=models.SET_NULL)
     status = models.SmallIntegerField(choices=asset_status, default=0, verbose_name='设备状态')
-
     manufacturer = models.ForeignKey('Manufacturer', null=True, blank=True, verbose_name='制造商',
                                      on_delete=models.SET_NULL)
     manage_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name='管理IP')
@@ -37,25 +37,34 @@ class Asset(models.Model):
                               on_delete=models.SET_NULL)
     idc = models.ForeignKey('IDC', null=True, blank=True, verbose_name='所在机房', on_delete=models.SET_NULL)
     contract = models.ForeignKey('Contract', null=True, blank=True, verbose_name='合同', on_delete=models.SET_NULL)
-
     purchase_day = models.DateField(null=True, blank=True, verbose_name="购买日期")
     expire_day = models.DateField(null=True, blank=True, verbose_name="过保日期")
     price = models.FloatField(null=True, blank=True, verbose_name="价格")
 
     approved_by = models.ForeignKey(User, null=True, blank=True, verbose_name='批准人', related_name='approved_by',
                                     on_delete=models.SET_NULL)
-
     memo = models.TextField(null=True, blank=True, verbose_name='备注')
     c_time = models.DateTimeField(auto_now_add=True, verbose_name='批准日期')
     m_time = models.DateTimeField(auto_now=True, verbose_name='更新日期')
 
     def __str__(self):
-        return '<%s>  %s' % (self.get_asset_type_display(), self.name)
+        return '<%s>  %s' % (self.asset_type.type_name, self.name)
 
     class Meta:
         verbose_name = '资产总表'
         verbose_name_plural = "资产总表"
         ordering = ['-c_time']
+
+class AssetType(models.Model):
+    type_id = models.CharField(max_length=64, unique=True, verbose_name='资产编码')
+    type_name = models.CharField(max_length=64,verbose_name='资产类型')
+
+    def __str__(self):
+        return self.type_name
+
+    class Meta:
+        verbose_name = '资产类型'
+        verbose_name_plural = "资产类型"
 
 
 class Server(models.Model):
@@ -175,18 +184,30 @@ class Software(models.Model):
         (2, '业务软件'),
     )
 
-    sub_asset_type = models.SmallIntegerField(choices=sub_asset_type_choice, default=0, verbose_name="软件类型")
+    software_type = models.ForeignKey('SoftwareType',verbose_name='软件类型',on_delete=models.CASCADE,null=True,blank=True)
     license_num = models.IntegerField(default=1, verbose_name="授权数量")
     version = models.CharField(max_length=64, unique=True, help_text='例如: RedHat release 7 (Final)',
                                verbose_name='软件/系统版本')
 
+    c_time = models.DateTimeField(auto_now_add=True, verbose_name='批准日期')
+    m_time = models.DateTimeField(auto_now=True, verbose_name='更新日期')
+
     def __str__(self):
-        return '%s--%s' % (self.get_sub_asset_type_display(), self.version)
+        return '%s--%s' % (self.software_type.type_name, self.version)
 
     class Meta:
         verbose_name = '软件/系统'
         verbose_name_plural = "软件/系统"
 
+class SoftwareType(models.Model):
+    type_name = models.CharField(max_length=64, unique=True,verbose_name='软件类型')
+
+    def __str__(self):
+        return self.type_name
+
+    class Meta:
+        verbose_name = '软件类型'
+        verbose_name_plural = "软件类型"
 
 class CPU(models.Model):
     """CPU组件"""
@@ -366,6 +387,9 @@ class EventLog(models.Model):
         (4, '设备上线'),
         (5, '定期维护'),
         (6, '业务上线\更新\变更'),
+        (7, '待审批资产变更'),
+        (8, '软件变更'),
+        (9, '资产类型变更'),
     )
     asset = models.ForeignKey('Asset', blank=True, null=True, on_delete=models.SET_NULL)  # 当资产审批成功时有这项数据
     new_asset = models.ForeignKey('NewAssetApprovalZone', blank=True, null=True, on_delete=models.SET_NULL)  # 当资产审批失败时有这项数据
@@ -374,6 +398,8 @@ class EventLog(models.Model):
     detail = models.TextField('事件详情')
     date = models.DateTimeField('事件时间', auto_now_add=True)
     user = models.ForeignKey(User, blank=True, null=True, verbose_name='事件执行人', on_delete=models.SET_NULL)  # 自动更新资产数据时没有执行人
+    address = models.GenericIPAddressField('IP地址', blank=True, null=True)
+    useragent = models.CharField(max_length=512, blank=True, null=True, verbose_name='User_Agent')
     memo = models.TextField('备注', blank=True, null=True)
 
     def __str__(self):
@@ -395,8 +421,7 @@ class NewAssetApprovalZone(models.Model):
         ('securitydevice', '安全设备'),
         ('software', '软件资产'),
     )
-    asset_type = models.CharField(choices=asset_type_choice, default='server', max_length=64, blank=True, null=True,
-                                  verbose_name='资产类型')
+    asset_type = models.CharField(default='server', max_length=64, blank=True, null=True,verbose_name='资产类型')
 
     manufacturer = models.CharField(max_length=64, blank=True, null=True, verbose_name='生产厂商')
     model = models.CharField(max_length=128, blank=True, null=True, verbose_name='型号')
@@ -417,6 +442,18 @@ class NewAssetApprovalZone(models.Model):
 
     def __str__(self):
         return self.sn
+
+    def get_asset_type_name(self):
+        if AssetType.objects.filter(type_id=self.asset_type).exists():
+            assettype = get_object_or_404(AssetType,type_id=self.asset_type)
+            return assettype.type_name
+        return self.asset_type
+
+    def get_asset_type(self):
+        if AssetType.objects.filter(type_id=self.asset_type).exists():
+            assettype = get_object_or_404(AssetType,type_id=self.asset_type)
+            return assettype
+        return None
 
     class Meta:
         verbose_name = '新上线待批准资产'

@@ -1,0 +1,325 @@
+{% extends 'assets/index.html' %}
+{% load assets_tags %}
+{% load static %}
+
+  {% block title %}
+  <title>资产类型</title>
+  {% endblock title %}
+
+{% block index_active %}{% endblock %}
+{% block system_active %}active{% endblock %}
+{% block system_block %}display:block{% endblock %}
+{% block asset_type_active %}active{% endblock %}
+
+{% block navheader %}
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-1">
+                <div class="col-12">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'assets:index' %}">首页</a></li>
+                        <li class="breadcrumb-item active">资产类型</li>
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+{% endblock navheader %}
+	
+{% block content %}
+    {% get_is_admin request as is_admin %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">资产类型
+            <a href="javascript:void(0)" class="btn btn-sm btn-info ml-3 addtype">新增 + </a>
+            </h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button type="button" class="btn btn-tool" data-widget="remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body">
+            <table id="assets-lists" class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>资产类型编码</th>
+                    <th>资产类型</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for assettype in assettypes %}
+                <tr id="asset-{{ assettype.id }}">
+                    <td>{{ assettype.type_id }}</td>
+                    <td>{{ assettype.type_name }}</td>
+                    <td>
+                        <a href="#">修改</a>
+                        <a href="javascript:void(0);" id="{{ assettype.id }}" onclick="createmodal(this);"
+                           title="{{ assettype.type_id }},{{ assettype.type_name }}">删除</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>没有数据！</tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+
+
+    <!--删除确认窗口-->
+    <div id="modal-container">
+    </div>
+
+    <!--新增软件资产窗口-->
+    <div id="modal-addtype" class="iziModal">
+        <form role="form" method="POST" onsubmit="addtype(this);return false;" class="form-inline">
+            {% csrf_token %}
+            <div class="container-fluid">
+                <div class="row p-3">
+                    <div class="col-12 mb-3">
+                        <h4><strong>新增资产类型</strong></h4>
+                    </div>
+                    <div class="col-4 mb-3">
+                        <label class="float-right">资产类型编码:</label>
+                    </div>
+                    <div class="col-8 mb-3">
+                        <input type="text" class="form-control" name="type_id" maxlength="256" required
+                               style="width: 100%;">
+                    </div>
+                    <div class="col-4 mb-3">
+                        <label class="float-right">资产类型:</label>
+                    </div>
+                    <div class="col-8 mb-3">
+                        <input type="text" class="form-control" name="type_name" maxlength="256" required
+                               style="width: 100%;">
+                    </div>
+
+                    <div class="col-6 pl-3 pr-3">
+                        <button type="button" class="btn btn-block btn-secondary btn-flat" data-iziModal-close>取消</button>
+                    </div>
+                    <div class="col-6 pl-3 pr-3">
+                        <button type="submit" class="btn btn-block btn-success btn-flat" onclick="javascript:void(0);">新增
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock content %}
+
+{% block js %}
+
+<script>
+	// 删除
+	createmodal = function (event) {
+		var thisObj = $(event);	//js对象转jquery对象  
+		var asset_id = thisObj.attr('id');
+		var asset_name = thisObj.attr("title");
+
+		// 生成弹出框，使用 \ 换行
+		$("#modal-container").html('<div id="modal-delete-' + asset_id + '" class="iziModal"><div class="container-fluid"><div class="row">\
+									<div class="col-12 p-3"><h5 class="text-center mt-3">确定要删除 <' + asset_name + '> 吗？</h5></div><div class="col-6 p-3">\
+									<button type="button" class="btn btn-block btn-secondary btn-flat" data-iziModal-close>取消</button></div><div class="col-6 p-3">\
+									<a href="javascript:void(0)"><button type="button" class="btn btn-block btn-success btn-flat" id="' + asset_id + '-yes" title="\
+									' + asset_name + '" onclick="deletetype(this);">确定</button></a></div></div></div></div>');
+		
+		// 初始化弹出框
+		$("#modal-delete-" + asset_id).iziModal({
+			iconClass: 'icon-announcement',
+			width: 450,
+			padding: 10,
+			overlayClose: false,	// 是否允许点击模态窗口的外部来关闭模态窗口。
+			closeOnEscape: false, 	// 是否允许通过点击ESC键来关闭模态窗口。
+		});
+				
+		// 打开弹出框
+		$('#modal-delete-' + asset_id).iziModal('open');
+	}
+	
+		
+	deletetype = function(event) {
+		toastr.options.closeButton = true;
+		toastr.options.showMethod = 'slideDown';
+		toastr.options.hideMethod = 'fadeOut';
+		toastr.options.closeMethod = 'fadeOut';
+		toastr.options.timeOut = 4000;	
+		toastr.options.extendedTimeOut = 0;	
+		
+		var thisObj = $(event);	//js对象转jquery对象
+		var asset_id = thisObj.attr('id').split("-")[0];
+		var asset_name = thisObj.attr("title");
+		csrfmiddlewaretoken = '{{ request.COOKIES.csrftoken }}';
+		$.ajax({
+			url: "{% url 'assets:assettype_delete' %}",
+			async: true,
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				'csrfmiddlewaretoken': csrfmiddlewaretoken,
+				'id': asset_id,
+			},
+			timeout: 10000,
+			cache: true,
+			beforeSend: LoadFunction, //加载执行方法
+			error: errFunction,  //错误执行方法
+			success: succFunction, //成功执行方法
+		});
+		
+		function LoadFunction() {
+			//$("#aboutcontent").html('删除中...');
+			//alert('删除中');
+		};
+		
+		function errFunction() {
+			// 关闭弹出框
+			$('#modal-delete-' + asset_id).iziModal('close');
+			// 消息框
+			toastr.error('删除错误 <' + asset_name + '>');
+		};
+		
+		function succFunction(res) {
+			if (res.code != 200) {
+				// 关闭弹出框
+				$('#modal-delete-' + asset_id).iziModal('close');
+				// 消息框
+				toastr.error('删除错误 <' + asset_name + '>');
+			} else {
+				// 先销毁 datatable , 动态删除数据后，然后再重建
+				var dttable = $('#assets-lists').DataTable();
+				dttable.destroy();
+				
+				$("#asset-" + asset_id).remove();
+				
+				$("#assets-lists").DataTable({
+					language: {
+						"sProcessing": "处理中...",
+						"sLengthMenu": "显示 _MENU_ 项结果",
+						"sZeroRecords": "没有匹配结果",
+						"sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+						"sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+						"sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+						"sInfoPostFix": "",
+						"sSearch": "搜索:",
+						"sUrl": "",
+						"sEmptyTable": "表中数据为空",
+						"sLoadingRecords": "载入中...",
+						"sInfoThousands": ",",
+						"oPaginate": {
+							"sFirst": "首页",
+							"sPrevious": "上页",
+							"sNext": "下页",
+							"sLast": "末页"
+						},
+						"oAria": {
+							"sSortAscending": ": 以升序排列此列",
+							"sSortDescending": ": 以降序排列此列"
+						}
+					},
+					destroy: true,	// 允许重建
+					bProcessing:true,  // 表格数据过多处理时显示: sProcessing
+					lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "全部"]],
+					order: [],
+					 scrollY: 480,	// 滚动条
+					 scrollCollapse: true,
+					 jQueryUI: true,
+					 stateSave: true,	// 保存最后一次分页信息、排序信息，当页面刷新，或者重新进入这个页面，恢复上次的状态。
+					 stateDuration: 86400,	// 本地储存(0~更大)还是session储存(-1) 
+				});
+				
+				// 关闭弹出框
+				$('#modal-delete-' + asset_id).iziModal('close');
+				
+				// 消息框
+				toastr.success('成功删除 <' + asset_name + '>');
+			}
+		};
+	}
+	
+	// 新增软件资产
+	$("#modal-addtype").iziModal({
+		iconClass: 'icon-announcement',
+		//width: 400,
+		padding: 10,
+		overlayClose: false,	// 是否允许点击模态窗口的外部来关闭模态窗口。
+		closeOnEscape: false, 	// 是否允许通过点击ESC键来关闭模态窗口。
+	});
+	$(document).on('click', '.addtype', function (event) {
+		event.preventDefault();
+		$('#modal-addtype').iziModal('open');
+	});
+	
+	addtype = function(event) {
+		toastr.options.closeButton = true;
+		toastr.options.showMethod = 'slideDown';
+		toastr.options.hideMethod = 'fadeOut';
+		toastr.options.closeMethod = 'fadeOut';
+		toastr.options.timeOut = 4000;	
+		toastr.options.extendedTimeOut = 0;	
+		try {
+		var thisObj = $(event);	//js对象转jquery对象
+		var type_name = $(thisObj.find("input[name='type_name']")[0]).val();
+		var type_id = $(thisObj.find("input[name='type_id']")[0]).val();
+		csrfmiddlewaretoken = '{{ request.COOKIES.csrftoken }}';
+		
+		$.ajax({
+			url: "{% url 'assets:assettype_add' %}",
+			async: true,
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				'csrfmiddlewaretoken': csrfmiddlewaretoken,
+				'type_name': type_name,
+                'type_id':type_id,
+			},
+			timeout: 10000,
+			cache: true,
+			beforeSend: LoadFunction, //加载执行方法
+			error: errFunction,  //错误执行方法
+			success: succFunction, //成功执行方法
+		});
+		
+		function LoadFunction() {
+			//$("#aboutcontent").html('删除中...');
+			//alert('删除中');
+		};
+		
+		function errFunction() {
+			// 消息框
+			toastr.error('新增软件资产错误');
+		};
+		
+		function succFunction(res) {
+			if (res.code != 200) {
+				// 消息框
+				toastr.error('新增软件资产错误: ' + res.err);
+			} else {
+				// 消息框
+				toastr.success('新增软件资产成功');
+				var dttable = $('#assets-lists').DataTable();
+				var rowNode = dttable.row.add([type_id,type_name, '<a href="#">修改</a> <a href="javascript:void(0);" id="'+res.pk+'" onclick="createmodal(this);"\n' +
+                '                           title="'+type_id+','+type_name+'">删除</a>']).draw().node();
+				rowNode.id = 'asset-'+res.pk
+				//$(rowNode).css('color', 'red').animate({color: 'black'});
+			}
+		};
+		
+		// 关闭弹出框
+		$("#modal-addtype").iziModal('close');
+		$(thisObj.find("input[name='type_name']")[0]).val('');
+		$(thisObj.find("input[name='type_id']")[0]).val('');
+		} catch(err) {
+		console.log(err);
+		}
+		return false;
+	}
+	
+</script>
+{% endblock js %}

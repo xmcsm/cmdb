@@ -1,0 +1,89 @@
+{% extends 'assets/index.html' %}
+{% load static %}
+
+
+{% block title %}
+<title>业务系统</title>
+{% endblock title %}
+{% block head %}
+    <script src="{% static 'AdminLTE-3.0.5/plugins/sweetalert2/sweetalert2.min.js' %}"></script>
+    <script src="{% static 'AdminLTE-3.0.5/plugins/toastr/toastr.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'AdminLTE-3.0.5/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css' %}">
+{% endblock %}
+
+{% block index_active %}{% endblock %}
+{% block software_active %}active{% endblock %}
+
+{% block navheader %}
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-1">
+                <div class="col-12">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'assets:index' %}">首页</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'assets:software' %}">业务系统</a></li>
+                        <li class="breadcrumb-item active">{{ software.soft_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+    {% endblock navheader %}
+
+    {% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">{{ software.soft_name }}</h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button type="button" class="btn btn-tool" data-widget="remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+                <script>
+                    const Toast = Swal.mixin({
+                      toast: true,
+                      position: 'top-end',
+                      showConfirmButton: false,
+                      timer: 3000
+                    });
+                    {% if status_code == '200' %}
+                        Toast.fire({
+                            icon: 'success',
+                            title: '{{ message }}'
+                        })
+                        var interval = setInterval(() => {
+                            window.location.href = {% url 'assets:software' %}
+                            return false;
+                        },2000);
+                    {% elif status_code == '400' %}
+                        Toast.fire({
+                            icon: 'error',
+                            title: '{{ message }}'
+                        })
+                    {% endif %}
+                </script>
+
+            <form action="{% url 'assets:software_update' software.pk %}" method="post">
+                {% csrf_token %}
+                <div class="row">
+                    {% for filed in softwareform %}
+                        <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1"> {{ filed.label }}</div>
+                        <div class="col-3 col-sm-4 col-lg-5 border-bottom p-1">{{ filed }}</div>
+                    {% endfor %}
+                    <div class="col-12 col-sm-12 col-lg-12 border-top p-1">
+                        <button type="submit" class="btn btn-primary ">保存</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+{% endblock content %}

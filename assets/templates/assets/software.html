@@ -3,7 +3,7 @@
 {% load static %}
 
   {% block title %}
-  <title>软件资产列表</title>
+  <title>业务系统</title>
   {% endblock title %}
 
 {% block index_active %}{% endblock %}
@@ -16,7 +16,7 @@
                 <div class="col-12">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{% url 'assets:index' %}">首页</a></li>
-                        <li class="breadcrumb-item active">软件资产列表</li>
+                        <li class="breadcrumb-item active">业务系统</li>
                     </ol>
                 </div>
             </div>
@@ -28,8 +28,8 @@
     {% get_is_admin request as is_admin %}
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">软件资产列表{% if is_admin %}
-            <a href="javascript:void(0)" class="btn btn-sm btn-info ml-3 addsoft">新增 + </a>
+            <h3 class="card-title">业务系统{% if is_admin %}
+            <a href="{% url 'assets:software_detail' %}" class="btn btn-sm btn-info ml-3">新增 + </a>
             {% endif %}</h3>
             </h3>
             <div class="card-tools">
@@ -46,9 +46,11 @@
             <table id="assets-lists" class="table table-bordered table-striped">
                 <thead>
                 <tr>
-                    <th>软件类型</th>
-                    <th>软件/系统版本</th>
-                    <th>授权数量</th>
+                    <th>系统名称</th>
+                    <th>部署方式</th>
+                    <th>所属单位</th>
+                    <th>部署服务器</th>
+                    <th>访问地址</th>
                     <th>添加日期</th>
                     <th>更新日期</th>
                     <th>操作</th>
@@ -57,16 +59,23 @@
                 <tbody>
                 {% for asset in assets %}
                 <tr id="asset-{{ asset.id }}">
+                    <td>{{ asset.soft_name }}</td>
                     <td>{{ asset.software_type.type_name }}</td>
-                    <td>{{ asset.version }}</td>
-                    <td>{{ asset.license_num }}</td>
+                    <td>{{ asset.units.name }}</td>
+                    <td>
+                        {% for ass in asset.assets.all %}
+                            {{ ass }}
+                        {% endfor %}
+
+                    </td>
+                    <td>{{ asset.balanc_url }}</td>
                     <td>{{ asset.c_time|date:"Y/m/d H:m:s" }}</td>
                     <td>{{ asset.m_time|date:"Y/m/d H:m:s" }}</td>
                     <td>
                         {% if is_admin %}
-                        <a href="#">修改</a>
+                        <a href="{% url 'assets:software_update' asset.id %}">修改</a>
                         <a href="javascript:void(0);" id="{{ asset.id }}" onclick="createmodal(this);"
-                           title="{{ asset.get_sub_asset_type_display }},{{ asset.version }}">删除</a>{% endif %}
+                           title="{{ asset.soft_name }}">删除</a>{% endif %}
                     </td>
                 </tr>
                 {% empty %}

@@ -31,7 +31,7 @@
         <a href="{% url 'assets:software' %}" class="nav-link {% block software_active %}{% endblock %}">
             <i class="nav-icon far fa-credit-card"></i>
             <p>
-                软件资产
+                业务系统
             </p>
         </a>
     </li>
@@ -83,9 +83,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'assets:operation' %}" class="nav-link {% block software_type_active %}{% endblock %}">
+                    <a href="{% url 'assets:softwaretype_list' %}" class="nav-link {% block software_type_active %}{% endblock %}">
                         <i class="fas fa-wrench nav-icon"></i>
-                        <p>软件类型</p>
+                        <p>部署方式</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'assets:subordinateunits_list' %}" class="nav-link {% block subordinate_units_active %}{% endblock %}">
+                        <i class="fas fa-wrench nav-icon"></i>
+                        <p>所属单位</p>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -478,7 +484,7 @@
                 legend: {
                     orient: 'vertical',
                     left: 'left',
-                    data: ['服务器', '网络设备', '存储设备', '安全设备', '软件资产']
+                    data: {{ type_name_list|safe }}
                 },
                 series: [
                     {
@@ -486,13 +492,7 @@
                         type: 'pie',
                         radius: '55%',
                         center: ['50%', '60%'],
-                        data: [
-                            {value:{{ server_number }}, name: '服务器'},
-                            {value:{{ networkdevice_number }}, name: '网络设备'},
-                            {value:{{ storagedevice_number }}, name: '存储设备'},
-                            {value:{{ securitydevice_number }}, name: '安全设备'},
-                            {value:{{ software_number }}, name: '软件资产'}
-                        ],
+                        data: {{ type_count_list|safe }},
                         itemStyle: {
                             emphasis: {
                                 shadowBlur: 10,

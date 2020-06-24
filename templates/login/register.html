@@ -79,11 +79,11 @@
                 cache:false,
                 success:function (data) {
                     if(data['status'] == 'SUCCESS') {
-                        $('#register_error').html(data['message'][0]);
+                        $('#register_error').html(data['message']);
                         var interval = setInterval(() => {
                             window.location.href = {% url 'login:login' %}
                             return false;
-                        },3000);
+                        },2000);
                     }
                     else{
                         var msg = "";

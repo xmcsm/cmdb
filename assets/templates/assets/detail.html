@@ -45,13 +45,13 @@
                 <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1">资产ID：</div>
                 <div class="col-9 col-sm-10 col-lg-11 border-bottom p-1">{{ asset.id }}</div>
                 <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1">资产类型：</div>
-                <div class="col-9 col-sm-10 col-lg-11 border-bottom p-1">{{ asset.get_asset_type_display }}</div>
+                <div class="col-9 col-sm-10 col-lg-11 border-bottom p-1">{{ asset.asset_type.type_name }}</div>
                 <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1">名称：</div>
                 <div class="col-9 col-sm-10 col-lg-11 border-bottom p-1">{{ asset.name }}</div>
                 <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1">SN序列号：</div>
                 <div class="col-9 col-sm-10 col-lg-11 border-bottom p-1">{{ asset.sn }}</div>
-                <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1">管理IP：</div>
-                <div class="col-9 col-sm-10 col-lg-11 border-bottom p-1">{{ asset.manage_ip }}</div>
+                <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1">IP：</div>
+                <div class="col-9 col-sm-10 col-lg-11 border-bottom p-1">{{ asset.ip }}</div>
                 <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1">业务线：</div>
                 <div class="col-9 col-sm-10 col-lg-11 border-bottom p-1">{{ asset.business_unit }}</div>
                 <div class="col-3 col-sm-2 col-lg-1 border-bottom p-1">机房：</div>

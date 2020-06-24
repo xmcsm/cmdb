@@ -47,41 +47,25 @@
                 <thead>
                 <tr>
                     <th>资产类型</th>
-                    <th>子类型</th>
                     <th>资产名称</th>
+                    <th>IP</th>
                     <th>SN序列号</th>
                     <th>业务线</th>
                     <th>状态</th>
+                    <th>所属单位</th>
                     <th>机房</th>
                     <th>添加日期</th>
                     <th>更新日期</th>
-                    <th>标签</th>
+
                     <th>操作</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for asset in assets %}
                 <tr id="asset-{{ asset.id }}">
-                    {% if asset.asset_type == 'server' %}
-                    <td class="text-bold" style="color:green;">{{ asset.get_asset_type_display }}</td>
-                    <td>{{ asset.server.get_sub_asset_type_display }}</td>
-                    {% elif asset.asset_type == "networkdevice" %}
-                    <td class="text-bold" style="color:gray;">{{ asset.get_asset_type_display }}</td>
-                    <td>{{ asset.networkdevice.get_sub_asset_type_display }}</td>
-                    {% elif asset.asset_type == "storagedevice" %}
-                    <td class="text-bold" style="color:blue;">{{ asset.get_asset_type_display }}</td>
-                    <td>{{ asset.storagedevice.get_sub_asset_type_display }}</td>
-                    {% elif asset.asset_type == "securitydevice" %}
-                    <td class="text-bold" style="color:red;">{{ asset.get_asset_type_display }}</td>
-                    <td>{{ asset.securitydevice.get_sub_asset_type_display }}</td>
-                    {% endif %}
-
-                    {% if asset.asset_type == 'server' %}
+                    <td class="text-bold" style="color:green;">{{ asset.asset_type.type_name }}</td>
                     <td><a href="{% url 'assets:detail' asset.id %}">{{ asset.name }}</a></td>
-                    {% else %}
-                    <td>{{ asset.name }}</td>
-                    {% endif %}
-
+                    <td>{{ asset.ip }}</td>
                     <td>{{ asset.sn }}</td>
                     <td>{{ asset.business_unit | default_if_none:"-" }}</td>
 
@@ -96,17 +80,10 @@
                     {% elif asset.status == 4 %}
                     <td><label class="label label-info">{{ asset.get_status_display }}</label></td>
                     {% endif %}
-
+                    <td>{{ asset.units.name|default:"-"  }}</td>
                     <td>{{ asset.idc|default:"-" }}</td>
                     <td>{{ asset.c_time|date:"Y/m/d H:m:s" }}</td>
                     <td>{{ asset.m_time|date:"Y/m/d H:m:s" }}</td>
-                    <td>
-                        {% for tag in asset.tags.all %}
-                        <label class="label label-primary">{{ tag.name }}</label>
-                        {% empty %}
-                        -
-                        {% endfor %}
-                    </td>
                     <td>
                         <a href="#">修改</a>
                         <a href="javascript:void(0);" id="{{ asset.id }}" onclick="createmodal(this);"

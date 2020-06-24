@@ -12,7 +12,7 @@ class Asset(models.Model):
         ('networkdevice', '网络设备'),
         ('storagedevice', '存储设备'),
         ('securitydevice', '安全设备'),
-        ('software', '软件资产'),
+        ('software', '业务系统'),
     )
 
     asset_status = (
@@ -24,11 +24,13 @@ class Asset(models.Model):
         )
 
     asset_type = models.ForeignKey('AssetType',on_delete=models.CASCADE,verbose_name='资产类型')
+    ip = models.CharField(max_length=64, unique=True, verbose_name="IP")
     name = models.CharField(max_length=64, unique=True, verbose_name="资产名称")     # 不可重复
     sn = models.CharField(max_length=128, unique=True, verbose_name="资产序列号")  # 不可重复
     business_unit = models.ForeignKey('BusinessUnit', null=True, blank=True, verbose_name='所属业务线',
                                       on_delete=models.SET_NULL)
-    status = models.SmallIntegerField(choices=asset_status, default=0, verbose_name='设备状态')
+    units = models.ForeignKey('SubordinateUnits',verbose_name='所属单位',on_delete=models.CASCADE,null=True,blank=True)
+    status = models.ForeignKey('AssetStatus',on_delete=models.CASCADE, verbose_name='设备状态')
     manufacturer = models.ForeignKey('Manufacturer', null=True, blank=True, verbose_name='制造商',
                                      on_delete=models.SET_NULL)
     manage_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name='管理IP')
@@ -48,7 +50,7 @@ class Asset(models.Model):
     m_time = models.DateTimeField(auto_now=True, verbose_name='更新日期')
 
     def __str__(self):
-        return '<%s>  %s' % (self.asset_type.type_name, self.name)
+        return '<%s>  %s' % (self.asset_type.type_name, self.ip)
 
     class Meta:
         verbose_name = '资产总表'
@@ -66,6 +68,15 @@ class AssetType(models.Model):
         verbose_name = '资产类型'
         verbose_name_plural = "资产类型"
 
+class AssetStatus(models.Model):
+    status_name = models.CharField(max_length=64, verbose_name='状态名称')
+
+    def __str__(self):
+        return self.status_name
+
+    class Meta:
+        verbose_name = '状态表'
+        verbose_name_plural = "状态表"
 
 class Server(models.Model):
     """服务器设备"""
@@ -184,20 +195,24 @@ class Software(models.Model):
         (2, '业务软件'),
     )
 
-    software_type = models.ForeignKey('SoftwareType',verbose_name='软件类型',on_delete=models.CASCADE,null=True,blank=True)
-    license_num = models.IntegerField(default=1, verbose_name="授权数量")
-    version = models.CharField(max_length=64, unique=True, help_text='例如: RedHat release 7 (Final)',
-                               verbose_name='软件/系统版本')
-
-    c_time = models.DateTimeField(auto_now_add=True, verbose_name='批准日期')
+    software_type = models.ForeignKey('SoftwareType',verbose_name='部署方式',on_delete=models.CASCADE,null=True,blank=True)
+    units = models.ForeignKey('SubordinateUnits',verbose_name='所属单位',on_delete=models.CASCADE,null=True,blank=True)
+    assets = models.ManyToManyField('Asset', verbose_name='部署服务器',  blank=True)
+    soft_name = models.CharField(max_length=256,verbose_name='系统名称',null=True,blank=True)
+    balanc_url = models.TextField(verbose_name='访问地址',null=True,blank=True)
+    all_url = models.TextField(verbose_name='各节点访问地址',null=True,blank=True)
+    program_path = models.TextField(verbose_name='程序路径',null=True,blank=True)
+    domain_path = models.TextField(verbose_name='域路径',null=True,blank=True)
+    account_info = models.TextField(verbose_name='账号信息',null=True,blank=True)
+    c_time = models.DateTimeField(auto_now_add=True, verbose_name='添加日期')
     m_time = models.DateTimeField(auto_now=True, verbose_name='更新日期')
 
     def __str__(self):
-        return '%s--%s' % (self.software_type.type_name, self.version)
+        return '%s--%s' % (self.software_type.type_name, self.soft_name)
 
     class Meta:
-        verbose_name = '软件/系统'
-        verbose_name_plural = "软件/系统"
+        verbose_name = '业务系统信息'
+        verbose_name_plural = "业务系统信息"
 
 class SoftwareType(models.Model):
     type_name = models.CharField(max_length=64, unique=True,verbose_name='软件类型')
@@ -388,8 +403,10 @@ class EventLog(models.Model):
         (5, '定期维护'),
         (6, '业务上线\更新\变更'),
         (7, '待审批资产变更'),
-        (8, '软件变更'),
+        (8, '业务系统变更'),
         (9, '资产类型变更'),
+        (10, '软件类型变更'),
+        (11, '系统设置变更'),
     )
     asset = models.ForeignKey('Asset', blank=True, null=True, on_delete=models.SET_NULL)  # 当资产审批成功时有这项数据
     new_asset = models.ForeignKey('NewAssetApprovalZone', blank=True, null=True, on_delete=models.SET_NULL)  # 当资产审批失败时有这项数据
@@ -419,7 +436,7 @@ class NewAssetApprovalZone(models.Model):
         ('networkdevice', '网络设备'),
         ('storagedevice', '存储设备'),
         ('securitydevice', '安全设备'),
-        ('software', '软件资产'),
+        ('software', '业务系统'),
     )
     asset_type = models.CharField(default='server', max_length=64, blank=True, null=True,verbose_name='资产类型')
 
@@ -459,3 +476,13 @@ class NewAssetApprovalZone(models.Model):
         verbose_name = '新上线待批准资产'
         verbose_name_plural = "新上线待批准资产"
         ordering = ['-c_time']
+
+class SubordinateUnits(models.Model):
+    name = models.CharField(max_length=64, unique=True, verbose_name='单位名称')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = '所属单位'
+        verbose_name_plural = "所属单位"
